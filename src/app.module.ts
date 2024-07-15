@@ -5,6 +5,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigService } from '@nestjs/config';
 import { Movie } from './entity/movie.entity';
+import { MovieModule } from './movie/movie.module';
+import { ActorModule } from './actor/actor.module';
+import { DirectorModule } from './director/director.module';
+import { FestivalModule } from './festival/festival.module';
 import typeorm from './config/typeorm';
 
 @Module({
@@ -18,6 +22,10 @@ import typeorm from './config/typeorm';
     TypeOrmModule.forFeature([
       Movie,
     ]),
+    MovieModule,
+    ActorModule,
+    DirectorModule,
+    FestivalModule,
   ],
   controllers: [AppController],
   providers: [AppService],
