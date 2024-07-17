@@ -47,8 +47,21 @@ export class MovieService {
     return this.movieRepository.save(movie);
   }
 
-  findAll(): Promise<Movie[]> {
-    return this.movieRepository.find({ relations: ['director', 'actors', 'festivals'] });
+  async findAll(filter: string): Promise<Movie[]> {
+    let query = this.movieRepository.createQueryBuilder('movie');
+
+    switch (filter) {
+      case 'date':
+        query = query.orderBy('movie.releaseYear', 'DESC');
+        break;
+      case 'rating':
+        query = query.orderBy('movie.avgRating', 'DESC');
+        break;
+      default:
+        break;
+    }
+
+    return query.getMany();
   }
 
   async findOne(id: number): Promise<Movie> {
