@@ -9,7 +9,6 @@ import { MovieModule } from './movie/movie.module';
 import { ActorModule } from './actor/actor.module';
 import { DirectorModule } from './director/director.module';
 import { FestivalModule } from './festival/festival.module';
-import { HealthModule } from './health/health.module';
 import typeorm from './config/typeorm';
 
 @Module({
@@ -27,7 +26,6 @@ import typeorm from './config/typeorm';
     ActorModule,
     DirectorModule,
     FestivalModule,
-    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
