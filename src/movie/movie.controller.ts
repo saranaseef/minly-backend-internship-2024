@@ -13,10 +13,9 @@ export class MovieController {
   }
 
   @Get()
-  findAll(@Query('filter') filter: string) {
-    return this.movieService.findAll(filter);
+  findAll(@Query('filter') filter: string, @Query('page') page = 1, @Query('limit') limit = 8) {
+    return this.movieService.findAll(filter, Number(page), Number(limit));
   }
-
 
   @Get(':id')
   findOne(@Param('id') id: string) {

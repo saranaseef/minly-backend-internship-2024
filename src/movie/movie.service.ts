@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { In } from 'typeorm';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Movie } from '../entity/movie.entity';
@@ -30,11 +31,11 @@ export class MovieService {
     : null;
 
     const actors = actorIds && actorIds.length
-      ? await this.actorRepository.findByIds(actorIds)
+      ? await this.actorRepository.find({ where: { id: In(actorIds) } })
       : [];
 
     const festivals = festivalIds && festivalIds.length
-      ? await this.festivalRepository.findByIds(festivalIds)
+      ? await this.festivalRepository.find({ where: {id: In(festivalIds)}})
       : [];
 
     const movie = this.movieRepository.create({
@@ -47,22 +48,25 @@ export class MovieService {
     return this.movieRepository.save(movie);
   }
 
-  async findAll(filter: string): Promise<Movie[]> {
-    let query = this.movieRepository.createQueryBuilder('movie');
+  async findAll(filter: string, page: number, limit: number): Promise<{ data: Movie[]; total: number }> {
+    const queryBuilder = this.movieRepository.createQueryBuilder('movie');
 
-    switch (filter) {
-      case 'date':
-        query = query.orderBy('movie.releaseYear', 'DESC');
-        break;
-      case 'rating':
-        query = query.orderBy('movie.avgRating', 'DESC');
-        break;
-      default:
-        break;
+    if (filter === 'date') {
+      queryBuilder.orderBy('movie.releaseYear', 'DESC');
+    } else if (filter === 'rating') {
+      queryBuilder.orderBy('movie.avgRating', 'DESC');
     }
 
-    return query.getMany();
+    const total = await queryBuilder.getCount();
+
+    const movies = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    return { data: movies, total };
   }
+
 
   async findOne(id: number): Promise<Movie> {
     const movie = await this.movieRepository.findOne({ where: { id }, relations: ['director', 'actors', 'festivals'] });
