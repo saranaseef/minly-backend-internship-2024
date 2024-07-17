@@ -111,4 +111,23 @@ export class MovieService {
     }
     await this.movieRepository.remove(movie);
   }
+
+  async search(query: string, page: number, limit: number): Promise<{ data: Movie[]; total: number }> {
+    const queryBuilder = this.movieRepository.createQueryBuilder('movie');
+  
+    if (query) {
+      queryBuilder.where('LOWER(movie.title) LIKE LOWER(:query)', { query: `%${query}%` });
+    }
+  
+    const total = await queryBuilder.getCount();
+  
+    const movies = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+  
+    return { data: movies, total };
+  }
+
+  
 }

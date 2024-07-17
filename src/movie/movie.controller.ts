@@ -13,10 +13,14 @@ export class MovieController {
   }
 
   @Get()
-  findAll(@Query('filter') filter: string, @Query('page') page = 1, @Query('limit') limit = 8) {
-    return this.movieService.findAll(filter, Number(page), Number(limit));
+  findAll(@Query('filter') filter: string, @Query('query') query: string, @Query('page') page = 1, @Query('limit') limit = 8) {
+    if (query) {
+      return this.movieService.search(query, Number(page), Number(limit));
+    } else {
+      return this.movieService.findAll(filter, Number(page), Number(limit));
+    }
   }
-
+  
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.movieService.findOne(+id);
