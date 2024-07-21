@@ -56,9 +56,6 @@ export class Movie {
     @Column({ nullable: true })
     duration: string;
 
-    @Column({ nullable: true })
-    genre: string;
-
     @ManyToMany(() => Actor, (actor) => actor.movies)
     @JoinTable({
       name: 'movie_actor',
