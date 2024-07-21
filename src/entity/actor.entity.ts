@@ -1,12 +1,15 @@
-import { Entity, Unique, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, Unique, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, OneToMany, Generated } from 'typeorm';
 import { Gender } from './gender.enum';
 import { Movie } from './movie.entity';
+import { Character } from './character.entity';
+import { Award } from './awards.entity';
 
 @Entity()
-@Unique(['id'])
+@Unique(['id', 'uuid'])
 export class Actor {
 
-    @PrimaryGeneratedColumn('uuid')
+    @Column('uuid')
+    @Generated('uuid')
     uuid: string;
 
     @PrimaryGeneratedColumn()
@@ -40,6 +43,15 @@ export class Actor {
     @Column()
     numberOfAwards: string;
 
+    @Column({ nullable: true })
+    reviews: number;
+
+    @Column({ type: 'decimal', precision: 2, scale: 1, nullable: true })
+    rating: number; 
+
+    @Column({ nullable: true })
+    placeOfBirth: string; 
+
     @CreateDateColumn({ type: 'timestamp with time zone', default: () => 'CURRENT_TIMESTAMP' })
     createdAt: Date;
 
@@ -48,4 +60,10 @@ export class Actor {
 
     @ManyToMany(() => Movie, (movie) => movie.actors)
     movies: Movie[];
+
+    @OneToMany(() => Character, character => character.actor)
+    characters: Character[];
+
+    @OneToMany(() => Award, award => award.actor)
+    awards: Award[]; 
 }

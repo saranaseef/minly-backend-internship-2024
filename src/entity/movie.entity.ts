@@ -1,14 +1,17 @@
-import { Entity, Unique, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, Unique, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, ManyToMany, JoinTable, OneToMany, Generated } from 'typeorm';
 import { Director } from './director.entity';
 import { Actor } from './actor.entity';
 import { Festival } from './festival.entity'; 
-
+import { Genre } from './genre.entity';
+import { Character } from './character.entity';
+import { Award } from './awards.entity'; 
 
 @Entity()
-@Unique(['id'])
+@Unique(['id', 'uuid'])
 export class Movie {
 
-    @PrimaryGeneratedColumn('uuid')
+    @Column('uuid')
+    @Generated()
     uuid: string;
 
     @PrimaryGeneratedColumn()
@@ -41,6 +44,21 @@ export class Movie {
     @Column({ nullable: true })
     directorId: number;
 
+    @Column({ nullable: true })
+    overview: string;
+
+    @Column({ nullable: true })
+    writer: string;
+
+    @Column({ nullable: true })
+    language: string;
+
+    @Column({ nullable: true })
+    duration: string;
+
+    @Column({ nullable: true })
+    genre: string;
+
     @ManyToMany(() => Actor, (actor) => actor.movies)
     @JoinTable({
       name: 'movie_actor',
@@ -58,4 +76,17 @@ export class Movie {
     })
     festivals: Festival[];
 
+    @ManyToMany(() => Genre, (genre) => genre.movies)
+    @JoinTable({
+      name: 'movie_genre',
+      joinColumn: { name: 'movie_id', referencedColumnName: 'id' },
+      inverseJoinColumn: { name: 'genre_id', referencedColumnName: 'id' },
+  })
+  genres: Genre[];
+
+  @OneToMany(() => Character, character => character.movie)
+  characters: Character[];
+
+  @OneToMany(() => Award, (award) => award.movie)
+  awards: Award[];
 }

@@ -1,13 +1,15 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Timestamp, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Timestamp, OneToMany, Generated, Unique } from 'typeorm';
 import { Movie } from "./movie.entity"
 import { Gender } from './gender.enum';
 
 @Entity()
+@Unique(['id', 'uuid'])
 export class Director{
 
-    @PrimaryGeneratedColumn('uuid')
+    @Column('uuid')
+    @Generated()
     uuid: string;
-  
+   
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -19,7 +21,10 @@ export class Director{
   
     @Column()
     birthDate: Date;
-
+    
+    @Column({ nullable: true})
+    birthPlace: Date;
+    
     @Column()
     bio: string; 
 
