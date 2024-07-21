@@ -1,3 +1,4 @@
+// GenreService.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -54,13 +55,13 @@ export class GenreService {
     return movie.genres;
   }
 
-  async findMoviesByGenre(genreId: number): Promise<Movie[]> {
+  async findMoviesByGenreName(genreName: string): Promise<Movie[]> {
     const genre = await this.genreRepository.findOne({
-      where: { id: genreId },
+      where: { name: genreName },
       relations: ['movies'],
     });
     if (!genre) {
-      throw new NotFoundException(`Genre with ID ${genreId} not found`);
+      throw new NotFoundException(`Genre with name ${genreName} not found`);
     }
     return genre.movies;
   }

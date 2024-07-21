@@ -1,3 +1,4 @@
+// GenreController.ts
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { GenreService } from './genre.service';
 import { CreateGenreDto } from './dto/create-genre.dto';
@@ -37,8 +38,8 @@ export class GenreController {
     return this.genreService.findGenresByMovieId(+movieId);
   }
 
-  @Get(':id/movies')
-  findMoviesByGenre(@Param('id') genreId: string) {
-    return this.genreService.findMoviesByGenre(+genreId);
+  @Get(':name/movies')
+  findMoviesByGenreName(@Param('name') genreName: string) {
+    return this.genreService.findMoviesByGenreName(genreName);
   }
 }
