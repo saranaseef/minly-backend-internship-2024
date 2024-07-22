@@ -1,14 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { In } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Movie } from '../entity/movie.entity';
 import { Director } from '../entity/director.entity';
 import { Actor } from '../entity/actor.entity';
 import { Festival } from '../entity/festival.entity';
-
 
 @Injectable()
 export class MovieService {
@@ -27,15 +25,15 @@ export class MovieService {
     const { directorId, actorIds, festivalIds, ...movieData } = createMovieDto;
 
     const director = directorId
-    ? await this.directorRepository.findOne({ where: { id: +directorId } })
-    : null;
+      ? await this.directorRepository.findOne({ where: { id: +directorId } })
+      : null;
 
     const actors = actorIds && actorIds.length
       ? await this.actorRepository.find({ where: { id: In(actorIds) } })
       : [];
 
     const festivals = festivalIds && festivalIds.length
-      ? await this.festivalRepository.find({ where: {id: In(festivalIds)}})
+      ? await this.festivalRepository.find({ where: { id: In(festivalIds) } })
       : [];
 
     const movie = this.movieRepository.create({
@@ -50,26 +48,28 @@ export class MovieService {
 
   async findAll(filter: string, page: number, limit: number): Promise<{ data: Movie[]; total: number }> {
     const queryBuilder = this.movieRepository.createQueryBuilder('movie');
-
+  
     if (filter === 'date') {
       queryBuilder.orderBy('movie.releaseYear', 'DESC');
     } else if (filter === 'rating') {
       queryBuilder.orderBy('movie.avgRating', 'DESC');
     }
-
+  
     const total = await queryBuilder.getCount();
-
+  
     const movies = await queryBuilder
       .skip((page - 1) * limit)
       .take(limit)
       .getMany();
-
+  
     return { data: movies, total };
-  }
-
+  }  
 
   async findOne(id: number): Promise<Movie> {
-    const movie = await this.movieRepository.findOne({ where: { id }, relations: ['director', 'actors', 'festivals'] });
+    const movie = await this.movieRepository.findOne({ 
+      where: { id }, 
+      relations: ['director', 'actors', 'festivals', 'genres'] 
+    });
     if (!movie) {
       throw new NotFoundException(`Movie with ID ${id} not found`);
     }
@@ -124,10 +124,23 @@ export class MovieService {
     const movies = await queryBuilder
       .skip((page - 1) * limit)
       .take(limit)
+      .leftJoinAndSelect('movie.genres', 'genre')
       .getMany();
   
     return { data: movies, total };
   }
 
+  async findByGenre(genreId: number, page: number, limit: number): Promise<{ data: Movie[]; total: number }> {
+    const queryBuilder = this.movieRepository.createQueryBuilder('movie')
+      .innerJoinAndSelect('movie.genres', 'genre', 'genre.id = :genreId', { genreId });
   
+    const total = await queryBuilder.getCount();
+  
+    const movies = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+  
+    return { data: movies, total };
+  }
 }
