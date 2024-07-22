@@ -7,6 +7,7 @@ import { Movie } from '../entity/movie.entity';
 import { Director } from '../entity/director.entity';
 import { Actor } from '../entity/actor.entity';
 import { Festival } from '../entity/festival.entity';
+import { Character } from '../entity/character.entity';
 
 @Injectable()
 export class MovieService {
@@ -19,6 +20,8 @@ export class MovieService {
     private readonly actorRepository: Repository<Actor>,
     @InjectRepository(Festival)
     private readonly festivalRepository: Repository<Festival>,
+    @InjectRepository(Character)
+    private readonly characterRepository: Repository<Character>,
   ) {}
 
   async create(createMovieDto: CreateMovieDto): Promise<Movie> {
@@ -68,7 +71,8 @@ export class MovieService {
   async findOne(id: number): Promise<Movie> {
     const movie = await this.movieRepository.findOne({ 
       where: { id }, 
-      relations: ['director', 'actors', 'festivals', 'genres'] 
+      relations: ['director', 'actors', 'festivals', 'genres' , 'characters'] 
+
     });
     if (!movie) {
       throw new NotFoundException(`Movie with ID ${id} not found`);

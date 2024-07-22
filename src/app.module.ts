@@ -10,6 +10,7 @@ import { ActorModule } from './actor/actor.module';
 import { DirectorModule } from './director/director.module';
 import { FestivalModule } from './festival/festival.module';
 import { GenreModule } from './genre/genre.module';
+import { CharacterModule } from './character/character.module';
 import typeorm from './config/typeorm';
 
 @Module({
@@ -28,6 +29,7 @@ import typeorm from './config/typeorm';
     DirectorModule,
     FestivalModule,
     GenreModule,
+    CharacterModule,
   ],
   controllers: [AppController],
   providers: [AppService],

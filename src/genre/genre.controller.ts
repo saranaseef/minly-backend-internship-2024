@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { GenreService } from './genre.service';
 import { CreateGenreDto } from './dto/create-genre.dto';
 import { UpdateGenreDto } from './dto/update-genre.dto';
+import { Character } from 'src/entity/character.entity';
 
 @Controller('genre')
 export class GenreController {
@@ -41,4 +42,5 @@ export class GenreController {
   findMoviesByGenreName(@Param('name') genreName: string) {
     return this.genreService.findMoviesByGenreName(genreName);
   }
+
 }

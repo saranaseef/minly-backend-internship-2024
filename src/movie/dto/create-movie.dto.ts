@@ -30,4 +30,8 @@ export class CreateMovieDto {
   @IsArray()
   @IsUUID(undefined, { each: true })
   festivalIds: string[];
+  
+  @IsArray()
+  @IsUUID(undefined, { each: true })
+  characterIds: string;
 }
