@@ -23,6 +23,6 @@
     ],
     "types": ["node", "jest"]
   },
-  "include": ["src/**/*", "test/**/*"],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*", "test/**/*", "data-source.ts"],
+  "exclude": ["node_modules", "dist"]
 }
