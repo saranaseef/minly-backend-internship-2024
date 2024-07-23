@@ -20,7 +20,7 @@ export class Award {
     actorStatus: string;
 
     @Column()
-    movieTitle: string;
+    image: string;
 
     @ManyToOne(() => Actor, (actor) => actor.awards)
     actor: Actor;

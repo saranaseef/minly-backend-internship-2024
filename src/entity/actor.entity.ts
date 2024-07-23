@@ -52,6 +52,9 @@ export class Actor {
     @Column({ nullable: true })
     placeOfBirth: string; 
 
+    @Column({ nullable: true })
+    knownFor: string; 
+
     @CreateDateColumn({ type: 'timestamp with time zone', default: () => 'CURRENT_TIMESTAMP' })
     createdAt: Date;
 

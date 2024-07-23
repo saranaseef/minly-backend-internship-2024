@@ -1,18 +1,48 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { ActorService } from './actor.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Actor } from '../entity/actor.entity';
+import { CreateActorDto } from './dto/create-actor.dto';
+import { UpdateActorDto } from './dto/update-actor.dto';
 
-describe('ActorService', () => {
-  let service: ActorService;
+@Injectable()
+export class ActorService {
+  constructor(
+    @InjectRepository(Actor)
+    private readonly actorRepository: Repository<Actor>,
+  ) {}
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [ActorService],
-    }).compile();
+  async create(createActorDto: CreateActorDto): Promise<Actor> {
+    const actor = this.actorRepository.create(createActorDto);
+    return this.actorRepository.save(actor);
+  }
 
-    service = module.get<ActorService>(ActorService);
-  });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-});
+  async findOne(id: number): Promise<Actor> {
+    const actor = await this.actorRepository.findOne({
+      where: { id },
+      relations: ['characters', 'awards'], 
+    });
+    if (!actor) {
+      throw new NotFoundException(`Actor with ID ${id} not found`);
+    }
+    return actor;
+  }
+
+  async update(id: number, updateActorDto: UpdateActorDto): Promise<Actor> {
+    const actor = await this.actorRepository.findOne({ where: { id } });
+    if (!actor) {
+      throw new NotFoundException(`Actor with ID ${id} not found`);
+    }
+    Object.assign(actor, updateActorDto);
+    return this.actorRepository.save(actor);
+  }
+
+  async remove(id: number): Promise<void> {
+    const actor = await this.actorRepository.findOne({ where: { id } });
+    if (!actor) {
+      throw new NotFoundException(`Actor with ID ${id} not found`);
+    }
+    await this.actorRepository.remove(actor);
+  }
+}

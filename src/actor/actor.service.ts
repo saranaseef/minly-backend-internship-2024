@@ -1,26 +1,52 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Actor } from '../entity/actor.entity';
 import { CreateActorDto } from './dto/create-actor.dto';
 import { UpdateActorDto } from './dto/update-actor.dto';
 
 @Injectable()
 export class ActorService {
-  create(createActorDto: CreateActorDto) {
-    return 'This action adds a new actor';
+  constructor(
+    @InjectRepository(Actor)
+    private readonly actorRepository: Repository<Actor>,
+  ) {}
+
+  async create(createActorDto: CreateActorDto): Promise<Actor> {
+    const actor = this.actorRepository.create(createActorDto);
+    return this.actorRepository.save(actor);
   }
 
-  findAll() {
-    return `This action returns all actor`;
+  async findAll(): Promise<Actor[]> {
+    return this.actorRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} actor`;
+  async findOne(id: number): Promise<Actor> {
+    const actor = await this.actorRepository.findOne({
+      where: { id },
+      relations: ['characters', 'awards', 'characters.movie'],
+    });
+    if (!actor) {
+      throw new NotFoundException(`Actor with ID ${id} not found`);
+    }
+    return actor;
   }
 
-  update(id: number, updateActorDto: UpdateActorDto) {
-    return `This action updates a #${id} actor`;
+  async update(id: number, updateActorDto: Partial<UpdateActorDto>): Promise<Actor> {
+    const actor = await this.actorRepository.preload({
+      id,
+      ...updateActorDto,
+    });
+    if (!actor) {
+      throw new NotFoundException(`Actor with ID ${id} not found`);
+    }
+    return this.actorRepository.save(actor);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} actor`;
+  async remove(id: number): Promise<void> {
+    const result = await this.actorRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Actor with ID ${id} not found`);
+    }
   }
 }
