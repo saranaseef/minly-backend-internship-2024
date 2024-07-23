@@ -58,9 +58,6 @@ export class Actor {
     @UpdateDateColumn({ type: 'timestamp with time zone', default: () => 'CURRENT_TIMESTAMP' })
     updatedAt: Date;
 
-    @ManyToMany(() => Movie, (movie) => movie.actors)
-    movies: Movie[];
-
     @OneToMany(() => Character, character => character.actor)
     characters: Character[];
 

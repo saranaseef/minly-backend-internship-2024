@@ -56,15 +56,6 @@ export class Movie {
     @Column({ nullable: true })
     duration: string;
 
-    @ManyToMany(() => Actor, (actor) => actor.movies)
-    @JoinTable({
-      name: 'movie_actor',
-      joinColumn: { name: 'movie_id', referencedColumnName: 'id' },
-      inverseJoinColumn: { name: 'actor_id', referencedColumnName: 'id' }
-    })
-    actors: Actor[];
-    
-
     @ManyToMany(() => Festival, (festival) => festival.movies)
     @JoinTable({
       name: 'movie_festival',

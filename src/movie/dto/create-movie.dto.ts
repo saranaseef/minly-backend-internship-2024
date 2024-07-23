@@ -34,4 +34,8 @@ export class CreateMovieDto {
   @IsArray()
   @IsUUID(undefined, { each: true })
   characterIds: string;
+
+  @IsArray()
+  @IsUUID(undefined, { each: true })
+  genreIds: string[];
 }

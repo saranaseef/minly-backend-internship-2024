@@ -8,6 +8,7 @@ import { Director } from '../entity/director.entity';
 import { Actor } from '../entity/actor.entity';
 import { Festival } from '../entity/festival.entity';
 import { Character } from '../entity/character.entity';
+import { Genre } from '../entity/genre.entity';
 
 @Injectable()
 export class MovieService {
@@ -22,57 +23,68 @@ export class MovieService {
     private readonly festivalRepository: Repository<Festival>,
     @InjectRepository(Character)
     private readonly characterRepository: Repository<Character>,
+    @InjectRepository(Genre)
+    private readonly genreRepository: Repository<Genre>,
   ) {}
 
   async create(createMovieDto: CreateMovieDto): Promise<Movie> {
-    const { directorId, actorIds, festivalIds, ...movieData } = createMovieDto;
+    const { directorId, actorIds, festivalIds, genreIds, ...movieData } = createMovieDto;
 
-    const director = directorId
-      ? await this.directorRepository.findOne({ where: { id: +directorId } })
-      : null;
-
-    const actors = actorIds && actorIds.length
-      ? await this.actorRepository.find({ where: { id: In(actorIds) } })
-      : [];
-
-    const festivals = festivalIds && festivalIds.length
-      ? await this.festivalRepository.find({ where: { id: In(festivalIds) } })
-      : [];
+    const director = directorId ? await this.directorRepository.findOne({ where: { id: +directorId } }) : null;
+    const actors = actorIds && actorIds.length ? await this.actorRepository.find({ where: { id: In(actorIds) } }) : [];
+    const festivals = festivalIds && festivalIds.length ? await this.festivalRepository.find({ where: { id: In(festivalIds) } }) : [];
+    const genres = genreIds && genreIds.length ? await this.genreRepository.find({ where: { id: In(genreIds) } }) : [];
 
     const movie = this.movieRepository.create({
       ...movieData,
       director,
-      actors,
-      festivals,
     });
+
+    movie.characters = actors.map(actor => {
+      const character = new Character();
+      character.actor = actor;
+      return character;
+    });
+
+    movie.festivals = festivals;
+    movie.genres = genres;
 
     return this.movieRepository.save(movie);
   }
 
   async findAll(filter: string, page: number, limit: number): Promise<{ data: Movie[]; total: number }> {
     const queryBuilder = this.movieRepository.createQueryBuilder('movie');
-  
+
     if (filter === 'date') {
       queryBuilder.orderBy('movie.releaseYear', 'DESC');
     } else if (filter === 'rating') {
       queryBuilder.orderBy('movie.avgRating', 'DESC');
     }
-  
+
     const total = await queryBuilder.getCount();
-  
+
     const movies = await queryBuilder
       .skip((page - 1) * limit)
       .take(limit)
+      .leftJoinAndSelect('movie.genres', 'genre')
+      .leftJoinAndSelect('movie.characters', 'character')
+      .leftJoinAndSelect('character.actor', 'actor')
       .getMany();
-  
+
     return { data: movies, total };
-  }  
+  }
 
   async findOne(id: number): Promise<Movie> {
     const movie = await this.movieRepository.findOne({ 
       where: { id }, 
-      relations: ['director', 'actors', 'festivals', 'genres' , 'characters'] 
-
+      relations: {
+        director: true,
+        festivals: true,
+        genres: true,
+        characters: {
+          actor: true,
+        },
+      },
     });
     if (!movie) {
       throw new NotFoundException(`Movie with ID ${id} not found`);
@@ -81,12 +93,22 @@ export class MovieService {
   }
 
   async update(id: number, updateMovieDto: UpdateMovieDto): Promise<Movie> { 
-    const movie = await this.movieRepository.findOne({ where: { id }, relations: ['director', 'actors', 'festivals'] });
+    const movie = await this.movieRepository.findOne({ 
+      where: { id }, 
+      relations: {
+        director: true,
+        festivals: true,
+        genres: true,
+        characters: {
+          actor: true,
+        },
+      },
+    });
     if (!movie) {
       throw new NotFoundException(`Movie with ID ${id} not found`);
     }
 
-    const { directorId, actorIds, festivalIds, ...movieData } = updateMovieDto;
+    const { directorId, actorIds, festivalIds, genreIds, characterIds, ...movieData } = updateMovieDto;
 
     if (directorId) {
       const director = await this.directorRepository.findOne({ where: { id: +directorId } });
@@ -94,13 +116,22 @@ export class MovieService {
     }
 
     if (actorIds) {
-      const actors = await this.actorRepository.findByIds(actorIds);
-      movie.actors = actors;
+      const actors = await this.actorRepository.find({ where: { id: In(actorIds) } });
+      movie.characters = actors.map(actor => {
+        const character = new Character();
+        character.actor = actor;
+        return character;
+      });
     }
 
     if (festivalIds) {
-      const festivals = await this.festivalRepository.findByIds(festivalIds);
+      const festivals = await this.festivalRepository.find({ where: { id: In(festivalIds) } });
       movie.festivals = festivals;
+    }
+
+    if (genreIds) {
+      const genres = await this.genreRepository.find({ where: { id: In(genreIds) } });
+      movie.genres = genres;
     }
 
     Object.assign(movie, movieData);
@@ -118,33 +149,37 @@ export class MovieService {
 
   async search(query: string, page: number, limit: number): Promise<{ data: Movie[]; total: number }> {
     const queryBuilder = this.movieRepository.createQueryBuilder('movie');
-  
+
     if (query) {
       queryBuilder.where('LOWER(movie.title) LIKE LOWER(:query)', { query: `%${query}%` });
     }
-  
+
     const total = await queryBuilder.getCount();
-  
+
     const movies = await queryBuilder
       .skip((page - 1) * limit)
       .take(limit)
       .leftJoinAndSelect('movie.genres', 'genre')
+      .leftJoinAndSelect('movie.characters', 'character')
+      .leftJoinAndSelect('character.actor', 'actor')
       .getMany();
-  
+
     return { data: movies, total };
   }
 
   async findByGenre(genreId: number, page: number, limit: number): Promise<{ data: Movie[]; total: number }> {
     const queryBuilder = this.movieRepository.createQueryBuilder('movie')
-      .innerJoinAndSelect('movie.genres', 'genre', 'genre.id = :genreId', { genreId });
-  
+      .innerJoinAndSelect('movie.genres', 'genre', 'genre.id = :genreId', { genreId })
+      .leftJoinAndSelect('movie.characters', 'character')
+      .leftJoinAndSelect('character.actor', 'actor');
+
     const total = await queryBuilder.getCount();
-  
+
     const movies = await queryBuilder
       .skip((page - 1) * limit)
       .take(limit)
       .getMany();
-  
+
     return { data: movies, total };
   }
 }
