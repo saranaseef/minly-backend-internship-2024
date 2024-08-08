@@ -52,8 +52,11 @@ export class MovieService {
     return this.movieRepository.save(movie);
   }
 
-  async findAll(filter: string, page: number, limit: number): Promise<{ data: Movie[]; total: number }> {
-    const queryBuilder = this.movieRepository.createQueryBuilder('movie');
+  async findAll(filter: string, page: number, limit: number, genre?: string): Promise<{ data: Movie[]; total: number }> {
+    const queryBuilder = this.movieRepository.createQueryBuilder('movie')
+      .leftJoinAndSelect('movie.genres', 'genre')
+      .leftJoinAndSelect('movie.characters', 'character')
+      .leftJoinAndSelect('character.actor', 'actor');
 
     if (filter === 'date') {
       queryBuilder.orderBy('movie.releaseYear', 'DESC');
@@ -61,14 +64,15 @@ export class MovieService {
       queryBuilder.orderBy('movie.avgRating', 'DESC');
     }
 
+    if (genre) {
+      queryBuilder.andWhere('genre.name = :genre', { genre });
+    }
+
     const total = await queryBuilder.getCount();
 
     const movies = await queryBuilder
       .skip((page - 1) * limit)
       .take(limit)
-      .leftJoinAndSelect('movie.genres', 'genre')
-      .leftJoinAndSelect('movie.characters', 'character')
-      .leftJoinAndSelect('character.actor', 'actor')
       .getMany();
 
     return { data: movies, total };

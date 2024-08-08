@@ -16,7 +16,8 @@ export class MovieController {
   findAll(
     @Query('filter') filter: string, 
     @Query('page') page: number = 1, 
-    @Query('limit') limit: number = 10
+    @Query('limit') limit: number = 10,
+    @Query('genre') genre: string
   ) {
     return this.movieService.findAll(filter, page, limit);
   }

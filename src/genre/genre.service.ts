@@ -54,14 +54,19 @@ export class GenreService {
     return movie.genres;
   }
 
-  async findMoviesByGenreName(genreName: string): Promise<Movie[]> {
-    const genre = await this.genreRepository.findOne({
-      where: { name: genreName },
-      relations: ['movies'],
-    });
-    if (!genre) {
-      throw new NotFoundException(`Genre with name ${genreName} not found`);
-    }
-    return genre.movies;
+  async findMoviesByGenreName(name: string, page: number, limit: number): Promise<{ data: Movie[]; total: number }> {
+    const queryBuilder = this.movieRepository.createQueryBuilder('movie')
+      .innerJoinAndSelect('movie.genres', 'genre', 'genre.name = :name', { name })
+      .leftJoinAndSelect('movie.characters', 'character')
+      .leftJoinAndSelect('character.actor', 'actor');
+
+    const total = await queryBuilder.getCount();
+
+    const movies = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    return { data: movies, total };
   }
 }

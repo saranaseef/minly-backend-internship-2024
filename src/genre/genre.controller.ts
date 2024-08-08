@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { GenreService } from './genre.service';
 import { CreateGenreDto } from './dto/create-genre.dto';
 import { UpdateGenreDto } from './dto/update-genre.dto';
@@ -38,9 +38,13 @@ export class GenreController {
     return this.genreService.findGenresByMovieId(+movieId);
   }
 
-  @Get(':name/movies')
-  findMoviesByGenreName(@Param('name') genreName: string) {
-    return this.genreService.findMoviesByGenreName(genreName);
+  @Get('name/:name')
+  findMoviesByGenreName(
+    @Param('name') name: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.genreService.findMoviesByGenreName(name, page, limit);
   }
 
 }
